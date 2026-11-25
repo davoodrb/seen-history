@@ -202,6 +202,7 @@ export default function App() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [listMenuOpen, setListMenuOpen] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(20)
 
   // Escape closes the list options menu
   useEffect(() => {
@@ -332,6 +333,11 @@ export default function App() {
   useEffect(() => {
     setNameDraft(list.name)
   }, [active, list.name])
+
+  // Show the first 20 posters; "Show more" loads 20 at a time. Reset when switching lists.
+  useEffect(() => {
+    setVisibleCount(20)
+  }, [active])
 
   const showToast = useCallback((msg: string) => {
     setToast(msg)
@@ -1086,15 +1092,24 @@ export default function App() {
               <p>Nothing here yet — search above and add the first thing you&apos;ve watched.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-              {list.items.map((it, i) => (
-                <Poster
-                  key={`${it.t}-${i}`}
-                  item={it}
-                  onRemove={() => updateList((l) => ({ ...l, items: l.items.filter((_, j) => j !== i) }))}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                {list.items.slice(0, visibleCount).map((it, i) => (
+                  <Poster
+                    key={`${it.t}-${i}`}
+                    item={it}
+                    onRemove={() => updateList((l) => ({ ...l, items: l.items.filter((_, j) => j !== i) }))}
+                  />
+                ))}
+              </div>
+              {list.items.length > visibleCount && (
+                <div className="flex justify-center pt-2">
+                  <Button variant="outline" onClick={() => setVisibleCount((c) => c + 20)}>
+                    Show more ({list.items.length - visibleCount} more)
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
