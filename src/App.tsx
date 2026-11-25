@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import QRCode from 'react-qr-code'
 import { ArrowLeft, Clapperboard, Copy, Download, Info, Link2, Loader2, Moon, Plus, Save, Search, Settings, Share2, Sun, Trash2, Upload, Users, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -113,7 +112,7 @@ function PrivacyPolicy() {
       </LegalSection>
       <LegalSection heading="Sharing">
         <p>
-          A share code or QR code contains your whole list. Anyone who has the code can see the list, so only share
+          A share code contains your whole list. Anyone who has the code can see the list, so only share
           it with people you want to see it.
         </p>
       </LegalSection>
@@ -635,13 +634,6 @@ export default function App() {
     ? `${window.location.origin}${window.location.pathname}?c=${encodeURIComponent(shareCode)}`
     : ''
 
-  // A QR code at level L holds at most 2,953 bytes. Once the share link passes
-  // ~2,400 characters (about 80% of that — roughly 45-50 movies with posters),
-  // the squares get too dense to scan reliably at this size, so the QR is
-  // hidden and the code/link keep working as normal.
-  const QR_MAX_URL_LENGTH = 2400
-  const qrTooLong = shareUrl.length > QR_MAX_URL_LENGTH
-
   const copyText = async (text: string, msg: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -1064,59 +1056,48 @@ export default function App() {
         </CardContent>
       </Card>
 
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Share2 className="h-5 w-5" /> Share this list
-          </CardTitle>
-          <CardDescription>
-            One code holds your <strong>entire list</strong> — every title in it. It&apos;s generated automatically and updates
-            as your list changes. Anyone with the code or QR can see the list, no account, nothing stored on a server.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {shareCode ? (
-            <>
-              <p className="text-muted-foreground text-xs">
-                {shareCode.length} characters — the whole list is inside it.
-              </p>
-              <Textarea
-                readOnly
-                value={shareCode}
-                onClick={(e) => e.currentTarget.select()}
-                className="font-mono text-xs break-all"
-                rows={2}
-              />
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={shareList}>
-                  <Share2 className="h-4 w-4" /> Share
-                </Button>
-                <Button variant="outline" onClick={() => copyText(shareUrl, 'Link copied')}>
-                  <Link2 className="h-4 w-4" /> Copy link
-                </Button>
-                <Button variant="outline" onClick={() => copyText(shareCode, 'Code copied')}>
-                  <Copy className="h-4 w-4" /> Copy code
-                </Button>
-              </div>
-              {qrTooLong ? (
-                <p className="text-muted-foreground text-sm">
-                  This list is too long for a QR code — it would be too dense to scan. Share the code or link above
-                  instead; they hold the whole list either way.
+      {list.items.length > 0 && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5" /> Share this list
+            </CardTitle>
+            <CardDescription>
+              One code holds your <strong>entire list</strong> — every title in it. It&apos;s generated automatically and updates
+              as your list changes. Anyone with the code can see the list, no account, nothing stored on a server.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {shareCode ? (
+              <>
+                <p className="text-muted-foreground text-xs">
+                  {shareCode.length} characters — the whole list is inside it.
                 </p>
-              ) : (
-                <>
-                  <div className="inline-block rounded-xl bg-white p-3">
-                    <QRCode value={shareUrl} size={180} bgColor="#ffffff" fgColor="#000000" />
-                  </div>
-                  <p className="text-muted-foreground text-xs">Scan the QR to open this list. Long lists make a denser QR — the link works the same.</p>
-                </>
-              )}
-            </>
-          ) : (
-            <p className="text-muted-foreground text-sm">Generating your code…</p>
-          )}
-        </CardContent>
-      </Card>
+                <Textarea
+                  readOnly
+                  value={shareCode}
+                  onClick={(e) => e.currentTarget.select()}
+                  className="max-h-28 overflow-y-auto font-mono text-xs break-all"
+                  rows={2}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={shareList}>
+                    <Share2 className="h-4 w-4" /> Share
+                  </Button>
+                  <Button variant="outline" onClick={() => copyText(shareUrl, 'Link copied')}>
+                    <Link2 className="h-4 w-4" /> Copy link
+                  </Button>
+                  <Button variant="outline" onClick={() => copyText(shareCode, 'Code copied')}>
+                    <Copy className="h-4 w-4" /> Copy code
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <p className="text-muted-foreground text-sm">Generating your code…</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="mt-4" id="compare">
         <CardHeader>
