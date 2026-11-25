@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import QRCode from 'react-qr-code'
 import { ArrowLeft, Clapperboard, Copy, Download, Info, Link2, Loader2, Moon, Plus, Save, Search, Settings, Share2, Sun, Trash2, Upload, Users, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -64,6 +64,120 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+type View = 'main' | 'settings' | 'privacy' | 'terms'
+
+// Small text pages (Privacy Policy, Terms of Service), linked from the footer
+// and reachable directly at #privacy / #terms.
+function LegalPage({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>Last updated: November 25, 2026</CardDescription>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  )
+}
+
+function LegalSection({ heading, children }: { heading: string; children: ReactNode }) {
+  return (
+    <section className="mt-4 first:mt-0">
+      <h2 className="text-base font-semibold">{heading}</h2>
+      <div className="text-muted-foreground mt-1 space-y-2 text-sm">{children}</div>
+    </section>
+  )
+}
+
+function PrivacyPolicy() {
+  return (
+    <LegalPage title="Privacy Policy">
+      <LegalSection heading="No account, no tracking">
+        <p>
+          Seen History is made by Davood Rabiei. There is no account and no sign-up, and the app collects no
+          analytics, runs no tracking and shows no ads.
+        </p>
+      </LegalSection>
+      <LegalSection heading="What stays on your device">
+        <p>
+          Your lists — titles, years and posters — are stored in your browser&apos;s local storage, on your device
+          only. The app does not upload them anywhere unless you choose to share a list or back it up.
+        </p>
+      </LegalSection>
+      <LegalSection heading="Search">
+        <p>
+          When you search for a title, your query is sent to TMDB through a Cloudflare Worker
+          (seen-history-tmdb.davood3284.workers.dev) to fetch matching titles and posters. If that is unreachable,
+          the app falls back to IMDb&apos;s public suggestion feed and TVMaze. Your query goes to those services so
+          they can return results; no account or personal information is attached to it.
+        </p>
+      </LegalSection>
+      <LegalSection heading="Sharing">
+        <p>
+          A share code or QR code contains your whole list. Anyone who has the code can see the list, so only share
+          it with people you want to see it.
+        </p>
+      </LegalSection>
+      <LegalSection heading="Google Drive backup (optional)">
+        <p>
+          If you connect Google Drive in Settings, the app saves a backup of your lists to a hidden folder in your
+          Drive that only this app can see, and updates it when your lists change. Your Google sign-in token is kept
+          in memory only and is never stored. You can disconnect at any time in Settings.
+        </p>
+      </LegalSection>
+      <LegalSection heading="Contact">
+        <p>
+          Questions about this policy:{' '}
+          <a className="underline" href="mailto:davoodrb1@gmail.com">
+            davoodrb1@gmail.com
+          </a>
+          .
+        </p>
+      </LegalSection>
+    </LegalPage>
+  )
+}
+
+function TermsOfService() {
+  return (
+    <LegalPage title="Terms of Service">
+      <LegalSection heading="The app">
+        <p>Seen History is a free app, provided as-is, with no warranty.</p>
+      </LegalSection>
+      <LegalSection heading="Your lists">
+        <p>
+          No account is needed. You are responsible for the lists you keep and share — a share code shows your whole
+          list to anyone who has it, so share carefully.
+        </p>
+      </LegalSection>
+      <LegalSection heading="Fair use">
+        <p>Use the app lawfully, and don&apos;t use it to harm others.</p>
+      </LegalSection>
+      <LegalSection heading="Data sources">
+        <p>
+          Titles, posters and other data come from TMDB, IMDb and TVMaze, and belong to their owners. This product
+          uses the TMDB API but is not endorsed or certified by TMDB.
+        </p>
+      </LegalSection>
+      <LegalSection heading="Changes">
+        <p>
+          These terms may change from time to time. If you keep using the app after a change, you accept the new
+          terms.
+        </p>
+      </LegalSection>
+      <LegalSection heading="Contact">
+        <p>
+          Questions:{' '}
+          <a className="underline" href="mailto:davoodrb1@gmail.com">
+            davoodrb1@gmail.com
+          </a>
+          .
+        </p>
+      </LegalSection>
+    </LegalPage>
+  )
+}
+
 export default function App() {
   const [lists, setLists] = useState<Playlist[]>(() => loadLists())
   const [active, setActive] = useState(0)
@@ -72,7 +186,21 @@ export default function App() {
   const [selIdx, setSelIdx] = useState(-1)
   const [suggOpen, setSuggOpen] = useState(false)
   const [searching, setSearching] = useState(false)
-  const [view, setView] = useState<'main' | 'settings'>('main')
+  const [view, setView] = useState<View>(() => {
+    const h = window.location.hash
+    return h === '#privacy' ? 'privacy' : h === '#terms' ? 'terms' : 'main'
+  })
+  // Privacy and Terms are real pages: #privacy and #terms open them, so they
+  // have links that can be shared (and used for Google verification). The
+  // browser back button works through the hash.
+  useEffect(() => {
+    const applyHash = () => {
+      const h = window.location.hash
+      setView(h === '#privacy' ? 'privacy' : h === '#terms' ? 'terms' : 'main')
+    }
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [])
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
   // Theme: dark by default, remembered in localStorage. The class is applied
@@ -572,8 +700,17 @@ export default function App() {
             Your history of what you&apos;ve watched. Search it, add it, share the whole list as one code.
           </p>
         </div>
-        {view === 'settings' ? (
-          <Button variant="outline" size="icon" onClick={() => setView('main')} aria-label="Back to lists" title="Back to lists">
+        {view !== 'main' ? (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              setView('main')
+              window.location.hash = ''
+            }}
+            aria-label="Back to lists"
+            title="Back to lists"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
         ) : (
@@ -703,6 +840,10 @@ export default function App() {
             </CardContent>
           </Card>
         </>
+      ) : view === 'privacy' ? (
+        <PrivacyPolicy />
+      ) : view === 'terms' ? (
+        <TermsOfService />
       ) : (
         <>
       {incoming && (
@@ -1055,6 +1196,15 @@ export default function App() {
           Source:{' '}
           <a className="underline" href="https://github.com/davoodrb/seen-history">
             github.com/davoodrb/seen-history
+          </a>
+        </p>
+        <p className="mt-2">
+          <a className="underline" href="#privacy">
+            Privacy Policy
+          </a>
+          {' · '}
+          <a className="underline" href="#terms">
+            Terms of Service
           </a>
         </p>
       </footer>
