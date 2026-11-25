@@ -8,7 +8,7 @@ Your history of what you've watched — minimal, no account, no server.
 
 1. **Search and add.** One search box. Start typing a movie or series, pick it from the suggestions — it comes in with its poster, year and type (movie/series). No result? Press Enter to add what you typed.
 2. **That's your list.** Posters in a grid, tap ✕ to remove one. Nothing else is asked for — no genre, rating, notes or owner fields.
-3. **Share it.** The share code is generated automatically and updates as your list changes — the full code is shown in the share box. The code *is* your whole list — every title, year and poster, gzipped into one code. Share it, copy the link, copy the code, or share the QR. Anyone with the code or QR can see the list, no account.
+3. **Share it.** The share code is generated automatically and updates as your list changes — the full code is shown in the share box. The code *is* your whole list — every title, year and poster, gzipped into one code. Share it, copy the link, or copy the code. Anyone with the code can see the list, no account.
 4. **Compare.** Paste a friend's code or link and see what you've both watched, what only you have seen, and what only they have seen.
 
 Privacy Policy and Terms of Service pages are linked in the footer, and open directly at `…/seen-history/#privacy` and `#terms`.
@@ -32,7 +32,6 @@ If all are unreachable, you can still add titles by typing them and pressing Ent
 
 - [Vite](https://vite.dev/) + React 19 + TypeScript
 - [Tailwind CSS v4](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) (`src/components/ui/*`, `components.json`)
-- QR codes with `react-qr-code`
 - The share code is the list JSON, gzipped with the browser's built-in `CompressionStream` and base64url-encoded (plain base64url fallback on older browsers)
 
 ## Run it locally
