@@ -106,10 +106,9 @@ function PrivacyPolicy() {
       </LegalSection>
       <LegalSection heading="Search">
         <p>
-          When you search for a title, your query is sent to TMDB through a Cloudflare Worker
-          (seen-history-tmdb.davood3284.workers.dev) to fetch matching titles and posters. If that is unreachable,
-          the app falls back to IMDb&apos;s public suggestion feed and TVMaze. Your query goes to those services so
-          they can return results; no account or personal information is attached to it.
+          When you search for a title, your query is sent to TMDB to fetch matching titles and posters. If that is
+          unreachable, the app falls back to IMDb&apos;s public suggestion feed and TVMaze. Your query goes to those
+          services so they can return results; no account or personal information is attached to it.
         </p>
       </LegalSection>
       <LegalSection heading="Sharing">
