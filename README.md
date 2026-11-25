@@ -11,6 +11,8 @@ Your history of what you've watched — minimal, no account, no server.
 3. **Share it.** The share code is generated automatically and updates as your list changes — the full code is shown in the share box. The code *is* your whole list — every title, year and poster, gzipped into one code. Share it, copy the link, copy the code, or share the QR. Anyone with the code or QR can see the list, no account.
 4. **Compare.** Paste a friend's code or link and see what you've both watched, what only you have seen, and what only they have seen.
 
+Privacy Policy and Terms of Service pages are linked in the footer, and open directly at `…/seen-history/#privacy` and `#terms`.
+
 ## Backup
 
 Settings → Backup. **On this device:** download all your lists as one `.json` file, or restore from one. **Google Drive:** connect your own Google account and the app backs up to a hidden folder in your Drive (only this app can see it) about 2 seconds after every change — only your own lists, never anyone else's. Restore from Drive, or disconnect, from the same place. Your Google token is kept in memory only, never stored.
