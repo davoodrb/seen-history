@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowLeft, Clapperboard, Copy, Download, Info, Link2, Loader2, Moon, Plus, Save, Search, Settings, Share2, Sun, Trash2, Upload, Users, X } from 'lucide-react'
+import { ArrowLeft, Clapperboard, Copy, Download, EllipsisVertical, Info, Link2, Loader2, Moon, Plus, Save, Search, Settings, Share2, Sun, Trash2, Upload, Users, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -201,6 +201,17 @@ export default function App() {
   }, [])
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [listMenuOpen, setListMenuOpen] = useState(false)
+
+  // Escape closes the list options menu
+  useEffect(() => {
+    if (!listMenuOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setListMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [listMenuOpen])
   // Theme: dark by default, remembered in localStorage. The class is applied
   // here (before first paint) so a saved light theme never flashes dark.
   const [dark, setDark] = useState(() => {
@@ -215,7 +226,8 @@ export default function App() {
   })
   // Draft for the list name: typing never writes back live, so the field can
   // be erased and rewritten from empty. Save commits it, Dismiss reverts it.
-  const [nameDraft, setNameDraft] = useState('My list')
+  // It starts as the real list name, so the title never flashes "My list" on load.
+  const [nameDraft, setNameDraft] = useState(() => lists[0]?.name ?? 'My list')
   const restoreInputRef = useRef<HTMLInputElement>(null)
   const [shareCode, setShareCode] = useState('')
   const [incoming, setIncoming] = useState<Playlist | null>(null)
@@ -905,24 +917,11 @@ export default function App() {
         </Button>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setDeleteConfirm('')
-            setDeleteModalOpen(true)
-          }}
-        >
-          <Trash2 className="h-4 w-4" /> Delete list
-        </Button>
-      </div>
-
       <Card className="mt-4">
         <CardContent className="space-y-4 pt-6">
           <div>
             <div className="flex items-center gap-2">
-              <div className="relative max-w-xs flex-1">
+              <div className="relative flex-1">
                 <Input
                   value={nameDraft}
                   onChange={(e) => setNameDraft(e.target.value)}
@@ -931,7 +930,7 @@ export default function App() {
                     else if (e.key === 'Escape') setNameDraft(list.name)
                   }}
                   aria-label="List name"
-                  className="w-full border-0 pr-11 pl-1 text-xl font-extrabold shadow-none focus-visible:ring-0"
+                  className="w-full border bg-muted pr-11 pl-3 text-xl font-extrabold shadow-none focus-visible:ring-0 dark:bg-input/30"
                 />
                 {nameDraft !== list.name && (
                   <button
@@ -945,17 +944,58 @@ export default function App() {
                   </button>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={nameUnchanged}
-                onClick={saveName}
-                aria-label="Save list name"
-                title="Save name"
-              >
-                <Save className="h-4 w-4" />
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setListMenuOpen((o) => !o)}
+                  aria-label="List options"
+                  aria-haspopup="menu"
+                  aria-expanded={listMenuOpen}
+                  title="List options"
+                >
+                  <EllipsisVertical className="h-4 w-4" />
+                </Button>
+                {listMenuOpen && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Close menu"
+                      className="fixed inset-0 z-40 cursor-default"
+                      onClick={() => setListMenuOpen(false)}
+                    />
+                    <div role="menu" className="bg-popover absolute right-0 z-50 mt-1 w-48 rounded-md border p-1 shadow-md">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+                        onClick={() => {
+                          setListMenuOpen(false)
+                          copyText(list.name, 'List name copied')
+                        }}
+                      >
+                        <Copy className="h-4 w-4" /> Copy list name
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="text-destructive hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+                        onClick={() => {
+                          setListMenuOpen(false)
+                          setDeleteConfirm('')
+                          setDeleteModalOpen(true)
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" /> Delete playlist
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
+            <Button className="mt-2 w-full" disabled={nameUnchanged} onClick={saveName}>
+              <Save className="h-4 w-4" /> Save name
+            </Button>
             <p className="text-muted-foreground mt-1 px-1 text-sm">{list.items.length} watched</p>
           </div>
 
@@ -1041,7 +1081,10 @@ export default function App() {
           </p>
 
           {list.items.length === 0 ? (
-            <p className="text-muted-foreground">Nothing here yet — search above and add the first thing you&apos;ve watched.</p>
+            <div className="text-muted-foreground flex flex-col items-center gap-2 py-8 text-center">
+              <Clapperboard className="h-10 w-10" />
+              <p>Nothing here yet — search above and add the first thing you&apos;ve watched.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
               {list.items.map((it, i) => (
@@ -1207,7 +1250,18 @@ export default function App() {
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader>
-              <CardTitle id="delete-title">Delete “{list.name}”?</CardTitle>
+              <CardTitle id="delete-title">
+                Delete “
+                <button
+                  type="button"
+                  onClick={() => copyText(list.name, 'List name copied')}
+                  className="cursor-pointer underline decoration-dotted underline-offset-4"
+                  title="Click to copy the list name"
+                >
+                  {list.name}
+                </button>
+                ”?
+              </CardTitle>
               <CardDescription>This can&apos;t be undone. Type the list name to confirm.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -1221,7 +1275,7 @@ export default function App() {
                     setDeleteConfirm('')
                   }
                 }}
-                placeholder={list.name}
+                placeholder={`Type "${list.name}" to confirm`}
                 aria-label="Type the list name to confirm"
                 autoFocus
               />
