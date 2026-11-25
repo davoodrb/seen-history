@@ -63,7 +63,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
-type View = 'main' | 'settings' | 'privacy' | 'terms'
+type View = 'main' | 'settings' | 'privacy' | 'terms' | 'not-found'
 
 // Small text pages (Privacy Policy, Terms of Service), linked from the footer
 // and reachable directly at #privacy / #terms.
@@ -176,6 +176,59 @@ function TermsOfService() {
   )
 }
 
+// Shown for any unknown hash, e.g. #something-that-doesnt-exist.
+function NotFound() {
+  return (
+    <Card className="mt-4">
+      <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+        <p className="text-5xl font-extrabold">404</p>
+        <p className="text-muted-foreground">This page doesn&apos;t exist.</p>
+        <Button
+          className="mt-2"
+          onClick={() => {
+            window.location.hash = ''
+          }}
+        >
+          Back to lists
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+// The Google Drive logo (green/yellow/blue triangle), drawn as inline SVG
+// so the Drive section and its button can show the real mark.
+function DriveIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 87.3 78" className={className} aria-hidden="true">
+      <path
+        d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z"
+        fill="#0066da"
+      />
+      <path
+        d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z"
+        fill="#00ac47"
+      />
+      <path
+        d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z"
+        fill="#ea4335"
+      />
+      <path
+        d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z"
+        fill="#00832d"
+      />
+      <path
+        d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z"
+        fill="#2684fc"
+      />
+      <path
+        d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z"
+        fill="#ffba00"
+      />
+    </svg>
+  )
+}
+
 export default function App() {
   const [lists, setLists] = useState<Playlist[]>(() => loadLists())
   const [active, setActive] = useState(0)
@@ -186,15 +239,15 @@ export default function App() {
   const [searching, setSearching] = useState(false)
   const [view, setView] = useState<View>(() => {
     const h = window.location.hash
-    return h === '#privacy' ? 'privacy' : h === '#terms' ? 'terms' : 'main'
+    return h === '#privacy' ? 'privacy' : h === '#terms' ? 'terms' : h === '' ? 'main' : 'not-found'
   })
   // Privacy and Terms are real pages: #privacy and #terms open them, so they
   // have links that can be shared (and used for Google verification). The
-  // browser back button works through the hash.
+  // browser back button works through the hash. Any other hash is a 404 page.
   useEffect(() => {
     const applyHash = () => {
       const h = window.location.hash
-      setView(h === '#privacy' ? 'privacy' : h === '#terms' ? 'terms' : 'main')
+      setView(h === '#privacy' ? 'privacy' : h === '#terms' ? 'terms' : h === '' ? 'main' : 'not-found')
     }
     window.addEventListener('hashchange', applyHash)
     return () => window.removeEventListener('hashchange', applyHash)
@@ -203,6 +256,7 @@ export default function App() {
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [listMenuOpen, setListMenuOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(20)
+  const [compareShown, setCompareShown] = useState({ common: 20, mine: 20, them: 20 })
 
   // Escape closes the list options menu
   useEffect(() => {
@@ -679,6 +733,7 @@ export default function App() {
       onlyMine: pick([...A].filter((x) => !B.has(x))),
       onlyThem: pick([...B].filter((x) => !A.has(x))),
     })
+    setCompareShown({ common: 20, mine: 20, them: 20 })
     document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth' })
   }
 
@@ -785,7 +840,9 @@ export default function App() {
               </div>
               <Separator />
               <div>
-                <p className="font-medium">Google Drive</p>
+                <p className="flex items-center gap-2 font-medium">
+                  <DriveIcon className="h-5 w-5 shrink-0" /> Google Drive
+                </p>
                 {DRIVE_CLIENT_ID === '' ? (
                   <p className="text-muted-foreground mt-0.5">Google Drive backup isn&apos;t set up yet.</p>
                 ) : driveState === 'connected' ? (
@@ -817,7 +874,9 @@ export default function App() {
                         size="sm"
                         disabled={driveState === 'connecting'}
                         onClick={() => void connectDrive()}
+                        className="border-[#dadce0] bg-white text-[#1f1f1f] hover:bg-[#f8f9fa] hover:text-[#1f1f1f]"
                       >
+                        <DriveIcon className="h-5 w-5 shrink-0" />
                         {driveState === 'connecting' ? 'Connecting…' : 'Connect Google Drive'}
                       </Button>
                     </div>
@@ -853,6 +912,8 @@ export default function App() {
         <PrivacyPolicy />
       ) : view === 'terms' ? (
         <TermsOfService />
+      ) : view === 'not-found' ? (
+        <NotFound />
       ) : (
         <>
       {incoming && (
@@ -1105,7 +1166,7 @@ export default function App() {
               {list.items.length > visibleCount && (
                 <div className="flex justify-center pt-2">
                   <Button variant="outline" onClick={() => setVisibleCount((c) => c + 20)}>
-                    Show more ({list.items.length - visibleCount} more)
+                    Show more
                   </Button>
                 </div>
               )}
@@ -1185,29 +1246,50 @@ export default function App() {
                   {compare.common.length ? 'These are in common — good picks to talk about or rewatch.' : 'No overlap yet. The lists below are ideas for each other.'}
                 </p>
                 <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-                  {compare.common.map((it, i) => (
+                  {compare.common.slice(0, compareShown.common).map((it, i) => (
                     <Poster key={`c-${it.t}-${i}`} item={it} />
                   ))}
                   {compare.common.length === 0 && <p className="text-muted-foreground text-sm">—</p>}
                 </div>
+                {compare.common.length > compareShown.common && (
+                  <div className="mt-2 flex justify-center">
+                    <Button variant="outline" onClick={() => setCompareShown((s) => ({ ...s, common: s.common + 20 }))}>
+                      Show more
+                    </Button>
+                  </div>
+                )}
               </div>
               <div>
                 <h3 className="text-base font-bold">Only you ({compare.onlyMine.length})</h3>
                 <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-                  {compare.onlyMine.map((it, i) => (
+                  {compare.onlyMine.slice(0, compareShown.mine).map((it, i) => (
                     <Poster key={`m-${it.t}-${i}`} item={it} />
                   ))}
                   {compare.onlyMine.length === 0 && <p className="text-muted-foreground text-sm">—</p>}
                 </div>
+                {compare.onlyMine.length > compareShown.mine && (
+                  <div className="mt-2 flex justify-center">
+                    <Button variant="outline" onClick={() => setCompareShown((s) => ({ ...s, mine: s.mine + 20 }))}>
+                      Show more
+                    </Button>
+                  </div>
+                )}
               </div>
               <div>
                 <h3 className="text-base font-bold">Only them ({compare.onlyThem.length})</h3>
                 <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-                  {compare.onlyThem.map((it, i) => (
+                  {compare.onlyThem.slice(0, compareShown.them).map((it, i) => (
                     <Poster key={`t-${it.t}-${i}`} item={it} />
                   ))}
                   {compare.onlyThem.length === 0 && <p className="text-muted-foreground text-sm">—</p>}
                 </div>
+                {compare.onlyThem.length > compareShown.them && (
+                  <div className="mt-2 flex justify-center">
+                    <Button variant="outline" onClick={() => setCompareShown((s) => ({ ...s, them: s.them + 20 }))}>
+                      Show more
+                    </Button>
+                  </div>
+                )}
               </div>
               <Button
                 variant="outline"
