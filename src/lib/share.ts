@@ -2,7 +2,7 @@ import type { Item, Playlist } from './types'
 
 /**
  * The share code IS the whole list: list JSON, gzipped with the browser's
- * built-in CompressionStream, base64url-encoded. A code / QR alone therefore
+ * built-in CompressionStream, base64url-encoded. A code alone therefore
  * shows the list — nothing is stored on a server.
  * Format: "SH2-" + base64url(gzip(json))  (SH1- = plain base64url fallback)
  */
