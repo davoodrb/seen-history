@@ -874,7 +874,7 @@ export default function App() {
                         size="sm"
                         disabled={driveState === 'connecting'}
                         onClick={() => void connectDrive()}
-                        className="border-[#dadce0] bg-white text-[#1f1f1f] hover:bg-[#f8f9fa] hover:text-[#1f1f1f]"
+                        className="border-[#dadce0] bg-white text-[#1f1f1f] hover:bg-[#f8f9fa] hover:text-[#1f1f1f] dark:border-[#dadce0] dark:bg-white dark:text-[#1f1f1f] dark:hover:bg-[#f8f9fa] dark:hover:text-[#1f1f1f]"
                       >
                         <DriveIcon className="h-5 w-5 shrink-0" />
                         {driveState === 'connecting' ? 'Connecting…' : 'Connect Google Drive'}
